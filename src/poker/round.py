@@ -1,5 +1,5 @@
 import random
-
+from typing import List
 
 seed = None
 
@@ -11,7 +11,7 @@ class Round:
 
     def stats(self):
         return "\n".join(
-            f"{i + 1}: {hand.definitions}: {hand.stats()}"
+            f"{i + 1}: {','.join(hand.definitions)}: {hand.stats()}"
             for i, hand in enumerate(self.hands)
         )
 
@@ -49,23 +49,48 @@ class Deck:
         self.cards = list(new_deck())
         self.shuffle()
 
-    def deal(self, definitions):
-        return [self.cards.pop() for _ in range(len(definitions))]
+    def deal(self, definitions) -> List[Card]:
+        return [self.cards.pop(), self.cards.pop()]
 
     def shuffle(self):
         random.shuffle(self.cards)
 
 
+def parse_cards(cards: str):
+    return [Card(cards[i], cards[i + 1]) for i in range(0, len(cards), 2)]
+
+
 class Hand:
 
-    def __init__(self, definitions):
-        self.cards = None
-        self.definitions = definitions
+    def __init__(self, definition: str = None, cards=None):
+        self.cards = parse_cards(cards) if isinstance(cards, str) else cards
+        self.definitions = [it.strip() for it in definition.split(",")]
 
     def stats(self):
         return 0.9
 
+    def match(self):
+        return any(Definition(definition).match(self.cards) for definition in self.definitions)
+
     def deal(self, deck: Deck):
         self.cards = deck.deal(self.definitions)
 
+
+class Definition:
+
+    def __init__(self, definition):
+        self.firstRank = definition[0]
+        self.secondRank = definition[1]
+        self.suited = 's' in definition
+        self.plus = '+' in definition
+        self.pairs = definition[0] == definition[1]
+
+    def match(self, cards):
+        if self.pairs:
+            return cards[0].rank == cards[1].rank
+        if self.suited:
+            return cards[0].suit == cards[1].suit
+        if self.plus:
+            return cards[0].rank == self.firstRank or cards[0].rank == self.secondRank or cards[1].rank == self.firstRank or cards[1].rank == self.secondRank
+        return cards[0].rank == self.firstRank and cards[1].rank == self.secondRank
 
