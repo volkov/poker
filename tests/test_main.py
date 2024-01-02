@@ -1,4 +1,5 @@
 import poker.round
+import pytest
 from poker import Round, Definition, Card, Hand
 
 
@@ -24,5 +25,11 @@ def test_match_cards():
     assert Definition("AKs").match([Card("A", "♠"), Card("K", "♠")])
 
 
-def test_match_hand():
-    assert Hand("AKs", "A♠K♠").match()
+@pytest.mark.parametrize("definition, cards, expected", [
+    ("AKs", "A♠K♠", True),
+    ("AKs", "A♠K♣", False),
+    ("AKs", "A♠Q♠", False),
+
+])
+def test_match_hand(definition, cards, expected):
+    assert Hand(definition, cards).match() == expected
