@@ -76,6 +76,10 @@ class Hand:
         self.cards = deck.deal(self.definitions)
 
 
+def rank(r):
+    return "23456789TJQKA".index(r)
+
+
 class Definition:
 
     def __init__(self, definition):
@@ -86,13 +90,16 @@ class Definition:
         self.pairs = definition[0] == definition[1]
 
     def match(self, cards):
+        print(self.firstRank, self.secondRank, self.suited, self.plus, self.pairs)
+        print(rank(self.firstRank), rank(self.secondRank))
+        print(rank(cards[0].rank), rank(cards[1].rank))
         if self.pairs and cards[0].rank != cards[1].rank:
             return False
         if self.suited and cards[0].suit != cards[1].suit:
             return False
         if self.plus:
             return (cards[0].rank == self.firstRank or cards[1].rank == self.secondRank or
-                    cards[0].rank == self.secondRank or cards[0].rank == self.firstRank)
-        return (cards[0].rank == self.firstRank and cards[1].rank == self.secondRank or
-                cards[0].rank == self.secondRank and cards[1].rank == self.firstRank)
+                    cards[0].rank == self.secondRank or cards[1].rank == self.firstRank)
+        return (rank(cards[0].rank) >= rank(self.firstRank) and rank(cards[1].rank) >= rank(self.secondRank) or
+                rank(cards[0].rank) >= rank(self.secondRank) and rank(cards[1].rank) >= rank(self.firstRank))
 
