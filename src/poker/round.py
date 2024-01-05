@@ -34,6 +34,9 @@ class Card:
     def __str__(self):
         return f"{self.rank}{self.suit}"
 
+    def __repr__(self):
+        return f"{self.rank}{self.suit}"
+
 
 def new_deck():
     for suit in ["♠", "♣", "♥", "♦"]:
@@ -75,6 +78,27 @@ class Hand:
     def deal(self, deck: Deck):
         self.cards = deck.deal(self.definitions)
 
+    def probability(self):
+        deck = list(new_deck())
+        match_count = self._outs(deck)
+        return match_count / (len(deck) * (len(deck) - 1) / 2)
+
+    def outs(self):
+        deck = list(new_deck())
+        return self._outs(deck)
+
+    def _outs(self, deck):
+        match_count = 0
+        for i in range(len(deck)):
+            for j in range(i + 1, len(deck)):
+                self.cards = [deck[i], deck[j]]
+                if self.match():
+                    match_count += 1
+        return match_count
+
+    def __str__(self):
+        return f"{self.cards[0]} {self.cards[1]}"
+
 
 def rank(r):
     return "23456789TJQKA".index(r)
@@ -86,20 +110,25 @@ class Definition:
         self.firstRank = definition[0]
         self.secondRank = definition[1]
         self.suited = 's' in definition
+        self.offsuited = 'o' in definition
         self.plus = '+' in definition
         self.pairs = definition[0] == definition[1]
 
     def match(self, cards):
-        print(self.firstRank, self.secondRank, self.suited, self.plus, self.pairs)
-        print(rank(self.firstRank), rank(self.secondRank))
-        print(rank(cards[0].rank), rank(cards[1].rank))
         if self.pairs and cards[0].rank != cards[1].rank:
             return False
         if self.suited and cards[0].suit != cards[1].suit:
             return False
+        if self.offsuited and cards[0].suit == cards[1].suit:
+            return False
         if self.plus:
-            return (cards[0].rank == self.firstRank or cards[1].rank == self.secondRank or
-                    cards[0].rank == self.secondRank or cards[1].rank == self.firstRank)
-        return (rank(cards[0].rank) >= rank(self.firstRank) and rank(cards[1].rank) >= rank(self.secondRank) or
-                rank(cards[0].rank) >= rank(self.secondRank) and rank(cards[1].rank) >= rank(self.firstRank))
+            greater = (rank(cards[0].rank) >= rank(self.firstRank) and rank(cards[1].rank) >= rank(self.secondRank) or
+                       rank(cards[0].rank) >= rank(self.secondRank) and rank(cards[1].rank) >= rank(self.firstRank))
+            return greater
+
+        return (cards[0].rank == self.firstRank and cards[1].rank == self.secondRank or
+                cards[0].rank == self.secondRank and cards[1].rank == self.firstRank)
+
+    def __str__(self):
+        return f"{self.firstRank}{self.secondRank}{'s' if self.suited else ''}{'+' if self.plus else ''}"
 
